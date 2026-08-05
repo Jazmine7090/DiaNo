@@ -4,10 +4,7 @@ import numpy as np
 import xgboost as xgb
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-import gradio as gr
 import uvicorn
-
-import spaces
 
 # Initialize FastAPI application
 app = FastAPI(title="DiaNo Clinical Portal")
@@ -37,11 +34,6 @@ if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"Missing XGBoost model at {MODEL_PATH}")
 model = xgb.XGBClassifier()
 model.load_model(MODEL_PATH)
-
-# Define prediction function wrapped with ZeroGPU decorator
-@spaces.GPU
-def predict_inference(features_array):
-    return model.predict_proba(features_array)
 
 def validate_and_convert_inputs(data):
     errors = {}
@@ -171,7 +163,7 @@ def validate_and_convert_inputs(data):
 
     return clean_data, errors
 
-# Serve static clinical landing page (Registered first so "/" matches our custom view)
+# Serve static clinical landing page
 @app.get("/", response_class=HTMLResponse)
 async def index():
     html_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
@@ -210,8 +202,8 @@ async def predict(request: Request):
         # Prepare for inference
         features_array = np.array([ordered_features], dtype=np.float32)
 
-        # Run inference using ZeroGPU-wrapped function
-        probabilities = predict_inference(features_array)
+        # Run inference directly
+        probabilities = model.predict_proba(features_array)
         diabetes_prob = float(probabilities[0][1])
 
         # Binary decision based on decision threshold of 0.60
@@ -230,17 +222,7 @@ async def predict(request: Request):
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
-# Build a simple dummy Gradio App to satisfy Hugging Face Space checks
-with gr.Blocks(title="DiaNo Clinical Portal") as demo:
-    gr.Markdown("# DiaNo Clinical Portal")
-    gr.Markdown("The interactive clinical dashboard is served directly on the root path `/` of this Space.")
-    gr.Markdown("You can navigate directly to the Space URL to view the main clinical screening form.")
-
-# Mount the Gradio App onto FastAPI at root "/"
-# This allows standard Gradio system endpoints (/config, /info) to be served, passing the platform health check.
-app = gr.mount_gradio_app(app, demo, path="/")
-
 if __name__ == "__main__":
-    # Hugging Face sets PORT env variable automatically
-    port = int(os.environ.get("PORT", 7860))
+    # Render binds dynamically to PORT env variable
+    port = int(os.environ.get("PORT", 5001))
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
