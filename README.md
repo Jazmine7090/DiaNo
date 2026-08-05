@@ -1,7 +1,7 @@
 ---
 title: DiaNo Diabetes Predictor
 emoji: 🩺
-colorFrom: teal
+colorFrom: green
 colorTo: blue
 sdk: gradio
 sdk_version: 4.44.1
