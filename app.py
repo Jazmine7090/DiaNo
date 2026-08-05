@@ -7,16 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 import gradio as gr
 import uvicorn
 
-# Conditional spaces package load to support both local run and HF Spaces
-# This prevents local ModuleNotFoundError while ensuring the HF ZeroGPU runtime finds the real package
-ON_HF = "SPACE_ID" in os.environ
-if ON_HF:
-    import spaces
-else:
-    class spaces:
-        @staticmethod
-        def GPU(func):
-            return func
+import spaces
 
 # Initialize FastAPI application
 app = FastAPI(title="DiaNo Clinical Portal")
