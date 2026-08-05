@@ -6,12 +6,17 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 import gradio as gr
 import uvicorn
-import spaces
 
-# Define prediction function wrapped with ZeroGPU decorator
-@spaces.GPU
-def predict_inference(features_array):
-    return model.predict_proba(features_array)
+# Conditional spaces package load to support both local run and HF Spaces
+# This prevents local ModuleNotFoundError while ensuring the HF ZeroGPU runtime finds the real package
+ON_HF = "SPACE_ID" in os.environ
+if ON_HF:
+    import spaces
+else:
+    class spaces:
+        @staticmethod
+        def GPU(func):
+            return func
 
 # Initialize FastAPI application
 app = FastAPI(title="DiaNo Clinical Portal")
@@ -41,6 +46,11 @@ if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"Missing XGBoost model at {MODEL_PATH}")
 model = xgb.XGBClassifier()
 model.load_model(MODEL_PATH)
+
+# Define prediction function wrapped with ZeroGPU decorator
+@spaces.GPU
+def predict_inference(features_array):
+    return model.predict_proba(features_array)
 
 def validate_and_convert_inputs(data):
     errors = {}
@@ -170,7 +180,7 @@ def validate_and_convert_inputs(data):
 
     return clean_data, errors
 
-# Serve static clinical landing page
+# Serve static clinical landing page (Registered first so "/" matches our custom view)
 @app.get("/", response_class=HTMLResponse)
 async def index():
     html_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
@@ -235,8 +245,9 @@ with gr.Blocks(title="DiaNo Clinical Portal") as demo:
     gr.Markdown("The interactive clinical dashboard is served directly on the root path `/` of this Space.")
     gr.Markdown("You can navigate directly to the Space URL to view the main clinical screening form.")
 
-# Mount the Gradio App onto FastAPI
-app = gr.mount_gradio_app(app, demo, path="/gradio")
+# Mount the Gradio App onto FastAPI at root "/"
+# This allows standard Gradio system endpoints (/config, /info) to be served, passing the platform health check.
+app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
     # Hugging Face sets PORT env variable automatically
