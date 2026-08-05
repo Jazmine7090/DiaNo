@@ -7,6 +7,20 @@ from fastapi.responses import HTMLResponse, JSONResponse
 import gradio as gr
 import uvicorn
 
+# Hugging Face ZeroGPU requires at least one @spaces.GPU decorator to keep the container running
+try:
+    import spaces
+except ImportError:
+    # Local environment fallback
+    class spaces:
+        @staticmethod
+        def GPU(func):
+            return func
+
+@spaces.GPU
+def dummy_gpu_trigger():
+    return "ZeroGPU Trigger Active"
+
 # Initialize FastAPI application
 app = FastAPI(title="DiaNo Clinical Portal")
 
