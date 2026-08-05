@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiaNo - Clinical Diabetes Risk Assessment</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --brand-primary: #0f766e; /* Clinical Deep Teal */
+            --brand-primary-light: #14b8a6;
+            --brand-primary-bg: #f0fdfa;
+            --brand-secondary: #0369a1; /* Hospital Blue */
+            --brand-secondary-bg: #f0f9ff;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --border-color: #e2e8f0;
+            --white: #ffffff;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 0;
+        }
+
+        /* Medical Navbar Header */
+        .navbar {
+            background-color: var(--white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-light) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.25rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--brand-primary);
+            line-height: 1;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .nav-meta {
+            font-size: 0.85rem;
+            color: var(--brand-primary);
+            font-weight: 600;
+            background-color: var(--brand-primary-bg);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            border: 1px solid rgba(15, 118, 110, 0.15);
+        }
+
+        /* Container Layout */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Clinical Cards */
+        .card {
+            background-color: var(--white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header-group {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--brand-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Tab Workflow styling */
+        .workflow-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 2rem;
+            gap: 1.5rem;
+        }
+
+        .workflow-tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-muted);
+            padding: 0.75rem 0.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .workflow-tab-btn:hover {
+            color: var(--brand-primary);
+        }
+
+        .workflow-tab-btn.active {
+            color: var(--brand-primary);
+            border-bottom-color: var(--brand-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Preset clinical profiles */
+        .presets-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .presets-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+
+        .preset-chip {
+            background-color: var(--bg-body);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .preset-chip:hover {
+            background-color: var(--brand-primary-bg);
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+        }
+
+        /* Clinical Inputs Form Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .question-text {
+            font-size: 0.775rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            background-color: var(--white);
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text-dark);
+            font-family: inherit;
+            font-size: 0.925rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        /* Clinician-style binary check boxes */
+        .check-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            transition: var(--transition);
+        }
+
+        .check-container:hover {
+            border-color: #cbd5e1;
+            background-color: #f1f5f9;
+        }
+
+        .check-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            padding-right: 1rem;
+        }
+
+        .check-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+
+        .check-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        /* Toggle switches */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .2s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--brand-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* BMI Calculator Panel style */
+        .bmi-calc-trigger {
+            font-size: 0.775rem;
+            font-weight: 600;
+            color: var(--brand-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            padding: 0;
+            margin-top: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            text-decoration: underline;
+        }
+
+        .bmi-calc-trigger:hover {
+            color: var(--brand-primary);
+        }
+
+        .bmi-calc-panel {
+            display: none;
+            background-color: var(--brand-secondary-bg);
+            border: 1px solid rgba(3, 105, 161, 0.15);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            animation: slideDown 0.25s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bmi-calc-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .bmi-calc-tab {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .bmi-calc-tab.active {
+            background-color: var(--brand-secondary);
+            color: white;
+            border-color: var(--brand-secondary);
+        }
+
+        .bmi-input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .bmi-subgroup {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .bmi-subgroup label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .bmi-subgroup input {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            width: 100%;
+        }
+
+        .bmi-result-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed rgba(3, 105, 161, 0.2);
+        }
+
+        .bmi-result-val {
+            font-weight: 700;
+            color: var(--brand-secondary);
+        }
+
+        .bmi-btn-apply {
+            width: 100%;
+            background-color: var(--brand-secondary);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .bmi-btn-apply:hover {
+            background-color: #0284c7;
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-submit {
+            flex: 1;
+            background-color: var(--brand-primary);
+            color: white;
+            border: none;
+            padding: 0.85rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: #0d5e56;
+            box-shadow: 0 4px 10px rgba(15, 118, 110, 0.15);
+        }
+
+        .btn-clear {
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: var(--text-muted);
+            padding: 0.85rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-clear:hover {
+            background-color: #e2e8f0;
+            color: var(--text-dark);
+        }
+
+        /* Clinical Report Sidebar Panel */
+        .report-panel {
+            position: sticky;
+            top: calc(76px + 2rem);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .report-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .report-status-box {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .report-status-box.inactive {
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            color: var(--text-muted);
+        }
+
+        .report-status-box.low {
+            background-color: var(--success-bg);
+            border: 1px solid rgba(21, 128, 61, 0.2);
+            color: var(--success);
+        }
+
+        .report-status-box.high {
+            background-color: var(--danger-bg);
+            border: 1px solid rgba(185, 28, 28, 0.2);
+            color: var(--danger);
+        }
+
+        .report-gauge-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin-bottom: 1rem;
+        }
+
+        .gauge-svg {
+            transform: rotate(-90deg);
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 10;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: #cbd5e1;
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 377; /* 2 * pi * 60 */
+            stroke-dashoffset: 377;
+            transition: stroke-dashoffset 0.8s ease-out, stroke 0.4s ease;
+        }
+
+        .gauge-val-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gauge-percentage {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1;
+        }
+
+        .gauge-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .report-badge-result {
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            margin-bottom: 0.75rem;
+        }
+
+        .report-badge-result.low {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .report-badge-result.high {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .report-explanation {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 320px;
+            line-height: 1.4;
+        }
+
+        /* Medical clinical recommendations list */
+        .clinical-guidelines {
+            display: none;
+            margin-top: 0.5rem;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .guideline-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .guideline-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .guideline-item {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding-left: 1.25rem;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .guideline-item:before {
+            content: "•";
+            color: var(--brand-primary);
+            font-weight: 900;
+            font-size: 1.1rem;
+            position: absolute;
+            left: 2px;
+            top: -2px;
+        }
+
+        /* Debug / Realignment info */
+        .debug-report-card {
+            padding: 1.25rem;
+        }
+
+        .debug-header {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .debug-header:hover {
+            color: var(--brand-primary);
+        }
+
+        .debug-table-wrapper {
+            margin-top: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .debug-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            text-align: left;
+        }
+
+        .debug-table th, .debug-table td {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .debug-table th {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .debug-table td.code {
+            font-family: monospace;
+            color: var(--brand-secondary);
+        }
+
+        .validation-error-msg {
+            color: var(--danger);
+            font-size: 0.75rem;
+            margin-top: 0.2rem;
+            display: none;
+        }
+
+        .banner-error {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(185, 28, 28, 0.2);
+            border-radius: 8px;
+            padding: 0.85rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+        }
+
+        .card-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Professional Medical Navbar -->
+    <nav class="navbar">
+        <a href="#" class="navbar-brand">
+            <div class="brand-logo">DN</div>
+            <div class="brand-text">
+                <h1>DiaNo Portal</h1>
+                <p>Clinical Risk Analysis & Prediction</p>
+            </div>
+        </a>
+        <div class="nav-meta">
+            Model Validation Mode
+        </div>
+    </nav>
+
+    <!-- Main Workspace Container -->
+    <div class="container">
+        <!-- Assessment Form Section -->
+        <main>
+            <div class="card">
+                <div class="card-header-group">
+                    <h2 class="card-title">Diabetes Risk Screening Form</h2>
+                    <p class="card-subtitle">Please input patient physiological metrics, medical records, and demographic indicators to evaluate probability scores.</p>
+                </div>
+
+                <!-- Presets selection -->
+                <div class="presets-box">
+                    <span class="presets-label">Load Reference Patient Profile:</span>
+                    <button type="button" class="preset-chip" onclick="loadPreset('healthy')">Healthy Adult Profile</button>
+                    <button type="button" class="preset-chip" onclick="loadPreset('high_risk')">High Risk Clinical Profile</button>
+                    <button type="button" class="preset-chip" onclick="loadPreset('senior')">Active Senior Profile</button>
+                    <button type="button" class="preset-chip" onclick="loadPreset('unhealthy_lifestyle')">Sedentary Lifestyle Profile</button>
+                </div>
+
+                <div class="workflow-tabs">
+                    <button type="button" class="workflow-tab-btn active" onclick="switchTab('clinical')">
+                        1. Clinical & Metrics
+                    </button>
+                    <button type="button" class="workflow-tab-btn" onclick="switchTab('lifestyle')">
+                        2. Lifestyle & Habits
+                    </button>
+                    <button type="button" class="workflow-tab-btn" onclick="switchTab('demographics')">
+                        3. Demographics
+                    </button>
+                </div>
+
+                <div class="banner-error" id="form-error-banner"></div>
+
+                <form id="prediction-form" onsubmit="handleFormSubmit(event)">
+                    <!-- CLINICAL TAB -->
+                    <div id="tab-clinical" class="tab-content active">
+                        <div class="input-grid">
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">High Blood Pressure</span>
+                                    <span class="check-desc">Told by doctor or health professional you have high BP</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="HighBP" name="HighBP" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">High Cholesterol</span>
+                                    <span class="check-desc">Told by health professional you have high cholesterol</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="HighChol" name="HighChol" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Cholesterol Checked</span>
+                                    <span class="check-desc">Had cholesterol checked within the past 5 years</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="CholCheck" name="CholCheck" value="1" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Stroke History</span>
+                                    <span class="check-desc">Ever told by a medical doctor you had a stroke</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="Stroke" name="Stroke" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Heart Disease / Attack</span>
+                                    <span class="check-desc">Coronary heart disease or heart attack history</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="HeartDiseaseorAttack" name="HeartDiseaseorAttack" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Difficulty Walking</span>
+                                    <span class="check-desc">Serious difficulty walking or climbing stairs</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="DiffWalk" name="DiffWalk" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- BMI Group with inline Calculator -->
+                            <div class="input-group">
+                                <label for="BMI">Body Mass Index (BMI)</label>
+                                <span class="question-text">Enter BMI directly (e.g. 24.8)</span>
+                                <input type="number" id="BMI" name="BMI" step="0.1" min="10" max="99.9" value="25.0" required>
+                                <button type="button" class="bmi-calc-trigger" onclick="toggleBmiCalc()">
+                                    📊 Show BMI Calculator
+                                </button>
+                                
+                                <!-- BMI Calculator Drawer -->
+                                <div class="bmi-calc-panel" id="bmi-calc-panel">
+                                    <div class="bmi-calc-tabs">
+                                        <button type="button" class="bmi-calc-tab active" id="bmi-tab-metric" onclick="setBmiUnit('metric')">Metric (kg/cm)</button>
+                                        <button type="button" class="bmi-calc-tab" id="bmi-tab-imperial" onclick="setBmiUnit('imperial')">Imperial (lbs/in)</button>
+                                    </div>
+                                    
+                                    <!-- Metric inputs -->
+                                    <div id="bmi-inputs-metric">
+                                        <div class="bmi-input-row">
+                                            <div class="bmi-subgroup">
+                                                <label for="bmi-weight-metric">Weight (kg)</label>
+                                                <input type="number" id="bmi-weight-metric" step="0.1" min="10" max="300" placeholder="e.g. 70" oninput="calculateLiveBmi()">
+                                            </div>
+                                            <div class="bmi-subgroup">
+                                                <label for="bmi-height-metric">Height (cm)</label>
+                                                <input type="number" id="bmi-height-metric" step="1" min="50" max="250" placeholder="e.g. 175" oninput="calculateLiveBmi()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Imperial inputs -->
+                                    <div id="bmi-inputs-imperial" style="display: none;">
+                                        <div class="bmi-input-row">
+                                            <div class="bmi-subgroup">
+                                                <label for="bmi-weight-imperial">Weight (lbs)</label>
+                                                <input type="number" id="bmi-weight-imperial" step="0.1" min="20" max="600" placeholder="e.g. 150" oninput="calculateLiveBmi()">
+                                            </div>
+                                            <div class="bmi-subgroup" style="flex: 1.5;">
+                                                <label>Height</label>
+                                                <div style="display: flex; gap: 0.25rem;">
+                                                    <input type="number" id="bmi-height-ft" min="2" max="8" placeholder="ft" oninput="calculateLiveBmi()">
+                                                    <input type="number" id="bmi-height-in" min="0" max="11" placeholder="in" oninput="calculateLiveBmi()">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bmi-result-bar">
+                                        <span>Calculated BMI:</span>
+                                        <span class="bmi-result-val" id="bmi-calc-result">--</span>
+                                    </div>
+                                    <button type="button" class="bmi-btn-apply" onclick="applyCalculatedBmi()">Apply Calculated BMI</button>
+                                </div>
+                                <div class="validation-error-msg" id="err-BMI"></div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="GenHlth">General Health Rating</label>
+                                <span class="question-text">Self-rated general health status</span>
+                                <select id="GenHlth" name="GenHlth" required>
+                                    <option value="1">1 - Excellent</option>
+                                    <option value="2" selected>2 - Very Good</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="4">4 - Fair</option>
+                                    <option value="5">5 - Poor</option>
+                                </select>
+                                <div class="validation-error-msg" id="err-GenHlth"></div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="PhysHlth">Physical Health (Days Poor)</label>
+                                <span class="question-text">Number of days physical illness/injury past 30 days</span>
+                                <input type="number" id="PhysHlth" name="PhysHlth" min="0" max="30" value="0" required>
+                                <div class="validation-error-msg" id="err-PhysHlth"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LIFESTYLE TAB -->
+                    <div id="tab-lifestyle" class="tab-content">
+                        <div class="input-grid">
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Smoker status</span>
+                                    <span class="check-desc">Smoked at least 100 cigarettes (5 packs) in entire life</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="Smoker" name="Smoker" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Physical Activity</span>
+                                    <span class="check-desc">Participated in exercise outside job in past month</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="PhysActivity" name="PhysActivity" value="1" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Consumes Fruits</span>
+                                    <span class="check-desc">Eat fruits or drink fruit juice 1+ times per day</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="Fruits" name="Fruits" value="1" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Consumes Vegetables</span>
+                                    <span class="check-desc">Eat vegetables 1+ times per day</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="Veggies" name="Veggies" value="1" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Heavy Alcohol Consumption</span>
+                                    <span class="check-desc">Men >14 drinks/wk, Women >7 drinks/wk</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="HvyAlcoholConsump" name="HvyAlcoholConsump" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="MentHlth">Mental Health (Days Poor)</label>
+                                <span class="question-text">Stress, depression, emotional problems past 30 days</span>
+                                <input type="number" id="MentHlth" name="MentHlth" min="0" max="30" value="0" required>
+                                <div class="validation-error-msg" id="err-MentHlth"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DEMOGRAPHICS TAB -->
+                    <div id="tab-demographics" class="tab-content">
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="Sex">Biological Sex</label>
+                                <span class="question-text">Patient biological sex</span>
+                                <select id="Sex" name="Sex" required>
+                                    <option value="0">Female</option>
+                                    <option value="1">Male</option>
+                                </select>
+                                <div class="validation-error-msg" id="err-Sex"></div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="Age">Age Classification Category</label>
+                                <span class="question-text">Select patient's current age bracket</span>
+                                <select id="Age" name="Age" required>
+                                    <option value="1">18 to 24 (Category 1)</option>
+                                    <option value="2">25 to 29 (Category 2)</option>
+                                    <option value="3">30 to 34 (Category 3)</option>
+                                    <option value="4">35 to 39 (Category 4)</option>
+                                    <option value="5" selected>40 to 44 (Category 5)</option>
+                                    <option value="6">45 to 49 (Category 6)</option>
+                                    <option value="7">50 to 54 (Category 7)</option>
+                                    <option value="8">55 to 59 (Category 8)</option>
+                                    <option value="9">60 to 64 (Category 9)</option>
+                                    <option value="10">65 to 69 (Category 10)</option>
+                                    <option value="11">70 to 74 (Category 11)</option>
+                                    <option value="12">75 to 79 (Category 12)</option>
+                                    <option value="13">80 or older (Category 13)</option>
+                                </select>
+                                <div class="validation-error-msg" id="err-Age"></div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="Education">Education Level</label>
+                                <span class="question-text">Highest level of school completed</span>
+                                <select id="Education" name="Education" required>
+                                    <option value="1">1 - Never attended school / Kindergarten</option>
+                                    <option value="2">2 - Elementary (Grade 1-8)</option>
+                                    <option value="3">3 - Some High School (Grade 9-11)</option>
+                                    <option value="4">4 - High School Graduate / GED</option>
+                                    <option value="5" selected>5 - Some College / Technical School</option>
+                                    <option value="6">6 - College Graduate</option>
+                                </select>
+                                <div class="validation-error-msg" id="err-Education"></div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="Income">Household Income Range</label>
+                                <span class="question-text">Estimated yearly household income scale</span>
+                                <select id="Income" name="Income" required>
+                                    <option value="1">1 - Less than $10,000</option>
+                                    <option value="2">2 - $10,000 to $15,000</option>
+                                    <option value="3">3 - $15,000 to $20,000</option>
+                                    <option value="4">4 - $20,000 to $25,000</option>
+                                    <option value="5">5 - $25,000 to $35,000</option>
+                                    <option value="6" selected>6 - $35,000 to $50,000</option>
+                                    <option value="7">7 - $50,000 to $75,000</option>
+                                    <option value="8">8 - $75,000 or more</option>
+                                </select>
+                                <div class="validation-error-msg" id="err-Income"></div>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Healthcare Insurance</span>
+                                    <span class="check-desc">Has healthcare coverage, HMO, or governmental plan</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="AnyHealthcare" name="AnyHealthcare" value="1" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="check-container">
+                                <div class="check-label-group">
+                                    <span class="check-title">Cost Barrier to Care</span>
+                                    <span class="check-desc">Needed to see doctor in past 12m but could not due to cost</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="NoDocbcCost" name="NoDocbcCost" value="1">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-clear" onclick="resetForm()">Reset Fields</button>
+                        <button type="submit" class="btn-submit">Run Screening Assessment</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- Clinical Report & Verification Sidebar -->
+        <aside>
+            <div class="card">
+                <div class="report-header">
+                    <span>Clinical Risk Report</span>
+                </div>
+                
+                <div class="report-status-box inactive" id="report-box">
+                    <div class="report-gauge-wrapper">
+                        <svg class="gauge-svg" width="140" height="140">
+                            <circle class="gauge-bg" cx="70" cy="70" r="60"></circle>
+                            <circle class="gauge-fill" id="risk-gauge" cx="70" cy="70" r="60"></circle>
+                        </svg>
+                        <div class="gauge-val-text">
+                            <span class="gauge-percentage" id="risk-val">--%</span>
+                            <span class="gauge-label">Diabetes Risk</span>
+                        </div>
+                    </div>
+
+                    <div class="report-badge-result" id="risk-badge" style="display: none;"></div>
+                    
+                    <p class="report-explanation" id="risk-explanation">
+                        Please fill in the patient details and click "Run Screening Assessment" to calculate the risk score.
+                    </p>
+                </div>
+
+                <!-- Clinical Guidelines / Checklist display -->
+                <div class="clinical-guidelines" id="clinical-guidelines">
+                    <div class="guideline-title">Recommended Clinical Steps</div>
+                    <ul class="guideline-list" id="guideline-list"></ul>
+                </div>
+            </div>
+
+            <!-- Developer Debug Panel -->
+            <div class="card debug-report-card">
+                <div class="debug-header" onclick="toggleDebug()">
+                    <span>Pipeline Feature Debugger</span>
+                    <span id="debug-toggle-indicator">▼ Click to Expand</span>
+                </div>
+                <div class="debug-table-wrapper" id="debug-wrapper">
+                    <table class="debug-table">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Model Feature Code</th>
+                                <th>Input Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debug-table-body">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1rem;">
+                                    Awaiting screening result...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Tab switching controller
+        function switchTab(tabName) {
+            document.querySelectorAll('.workflow-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            const activeBtn = Array.from(document.querySelectorAll('.workflow-tab-btn'))
+                .find(btn => btn.getAttribute('onclick').includes(tabName));
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // Form Reset
+        function resetForm() {
+            document.getElementById('prediction-form').reset();
+            clearValidationErrors();
+            hideResults();
+        }
+
+        function clearValidationErrors() {
+            document.getElementById('form-error-banner').style.display = 'none';
+            document.querySelectorAll('.validation-error-msg').forEach(el => {
+                el.innerText = '';
+                el.style.display = 'none';
+            });
+        }
+
+        function hideResults() {
+            const fill = document.getElementById('risk-gauge');
+            fill.style.strokeDashoffset = 377; // Reset gauge (2*pi*60 = 377)
+            document.getElementById('risk-val').innerText = '--%';
+            
+            const reportBox = document.getElementById('report-box');
+            reportBox.className = 'report-status-box inactive';
+            
+            const badge = document.getElementById('risk-badge');
+            badge.style.display = 'none';
+            
+            document.getElementById('risk-explanation').innerText = 'Please fill in the patient details and click "Run Screening Assessment" to calculate the risk score.';
+            document.getElementById('clinical-guidelines').style.display = 'none';
+            
+            const tbody = document.getElementById('debug-table-body');
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1rem;">Awaiting screening result...</td></tr>`;
+        }
+
+        // BMI Calculator Drawer & logic
+        let bmiUnit = 'metric';
+
+        function toggleBmiCalc() {
+            const panel = document.getElementById('bmi-calc-panel');
+            const trigger = document.querySelector('.bmi-calc-trigger');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                trigger.innerText = '📊 Show BMI Calculator';
+            } else {
+                panel.style.display = 'block';
+                trigger.innerText = '📊 Hide BMI Calculator';
+                calculateLiveBmi();
+            }
+        }
+
+        function setBmiUnit(unit) {
+            bmiUnit = unit;
+            document.getElementById('bmi-tab-metric').classList.toggle('active', unit === 'metric');
+            document.getElementById('bmi-tab-imperial').classList.toggle('active', unit === 'imperial');
+            
+            document.getElementById('bmi-inputs-metric').style.display = unit === 'metric' ? 'block' : 'none';
+            document.getElementById('bmi-inputs-imperial').style.display = unit === 'imperial' ? 'block' : 'none';
+            calculateLiveBmi();
+        }
+
+        function calculateLiveBmi() {
+            let bmi = null;
+            if (bmiUnit === 'metric') {
+                const weight = parseFloat(document.getElementById('bmi-weight-metric').value);
+                const heightCm = parseFloat(document.getElementById('bmi-height-metric').value);
+                if (weight > 0 && heightCm > 0) {
+                    const heightM = heightCm / 100;
+                    bmi = weight / (heightM * heightM);
+                }
+            } else {
+                const weight = parseFloat(document.getElementById('bmi-weight-imperial').value);
+                const ft = parseFloat(document.getElementById('bmi-height-ft').value) || 0;
+                const inches = parseFloat(document.getElementById('bmi-height-in').value) || 0;
+                const totalInches = (ft * 12) + inches;
+                if (weight > 0 && totalInches > 0) {
+                    bmi = (weight / (totalInches * totalInches)) * 703;
+                }
+            }
+            
+            const resVal = document.getElementById('bmi-calc-result');
+            if (bmi && !isNaN(bmi) && isFinite(bmi)) {
+                resVal.innerText = bmi.toFixed(1);
+            } else {
+                resVal.innerText = '--';
+            }
+        }
+
+        function applyCalculatedBmi() {
+            const resText = document.getElementById('bmi-calc-result').innerText;
+            if (resText !== '--') {
+                document.getElementById('BMI').value = resText;
+                toggleBmiCalc(); // Close drawer
+            }
+        }
+
+        // Toggle debug panel display
+        function toggleDebug() {
+            const wrapper = document.getElementById('debug-wrapper');
+            const indicator = document.getElementById('debug-toggle-indicator');
+            if (wrapper.style.display === 'block') {
+                wrapper.style.display = 'none';
+                indicator.innerText = '▼ Click to Expand';
+            } else {
+                wrapper.style.display = 'block';
+                indicator.innerText = '▲ Click to Collapse';
+            }
+        }
+
+        // Presets Loading
+        const presets = {
+            healthy: {
+                HighBP: 0, HighChol: 0, CholCheck: 1, Stroke: 0, HeartDiseaseorAttack: 0,
+                DiffWalk: 0, BMI: 22.0, GenHlth: 1, PhysHlth: 0, Smoker: 0, PhysActivity: 1,
+                Fruits: 1, Veggies: 1, HvyAlcoholConsump: 0, MentHlth: 0, Sex: 0, Age: 3,
+                Education: 6, Income: 8, AnyHealthcare: 1, NoDocbcCost: 0
+            },
+            high_risk: {
+                HighBP: 1, HighChol: 1, CholCheck: 1, Stroke: 0, HeartDiseaseorAttack: 1,
+                DiffWalk: 1, BMI: 34.5, GenHlth: 4, PhysHlth: 12, Smoker: 1, PhysActivity: 0,
+                Fruits: 0, Veggies: 0, HvyAlcoholConsump: 0, MentHlth: 8, Sex: 1, Age: 10,
+                Education: 3, Income: 3, AnyHealthcare: 1, NoDocbcCost: 0
+            },
+            senior: {
+                HighBP: 1, HighChol: 0, CholCheck: 1, Stroke: 0, HeartDiseaseorAttack: 0,
+                DiffWalk: 0, BMI: 26.2, GenHlth: 3, PhysHlth: 2, Smoker: 0, PhysActivity: 1,
+                Fruits: 1, Veggies: 1, HvyAlcoholConsump: 0, MentHlth: 0, Sex: 0, Age: 11,
+                Education: 5, Income: 6, AnyHealthcare: 1, NoDocbcCost: 0
+            },
+            unhealthy_lifestyle: {
+                HighBP: 0, HighChol: 1, CholCheck: 1, Stroke: 0, HeartDiseaseorAttack: 0,
+                DiffWalk: 0, BMI: 29.8, GenHlth: 3, PhysHlth: 5, Smoker: 1, PhysActivity: 0,
+                Fruits: 0, Veggies: 0, HvyAlcoholConsump: 1, MentHlth: 15, Sex: 1, Age: 6,
+                Education: 4, Income: 4, AnyHealthcare: 0, NoDocbcCost: 1
+            }
+        };
+
+        function loadPreset(key) {
+            const data = presets[key];
+            if (!data) return;
+            
+            clearValidationErrors();
+
+            const checkboxes = [
+                'HighBP', 'HighChol', 'CholCheck', 'Stroke', 'HeartDiseaseorAttack', 
+                'DiffWalk', 'Smoker', 'PhysActivity', 'Fruits', 'Veggies', 
+                'HvyAlcoholConsump', 'AnyHealthcare', 'NoDocbcCost'
+            ];
+            
+            checkboxes.forEach(field => {
+                document.getElementById(field).checked = data[field] === 1;
+            });
+
+            document.getElementById('BMI').value = data.BMI;
+            document.getElementById('GenHlth').value = data.GenHlth;
+            document.getElementById('PhysHlth').value = data.PhysHlth;
+            document.getElementById('MentHlth').value = data.MentHlth;
+            document.getElementById('Sex').value = data.Sex;
+            document.getElementById('Age').value = data.Age;
+            document.getElementById('Education').value = data.Education;
+            document.getElementById('Income').value = data.Income;
+
+            // Trigger prediction automatically
+            document.getElementById('prediction-form').requestSubmit();
+        }
+
+        // Form Submit
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            clearValidationErrors();
+
+            const form = document.getElementById('prediction-form');
+            const payload = {};
+
+            const binaryCheckboxes = [
+                'HighBP', 'HighChol', 'CholCheck', 'Stroke', 'HeartDiseaseorAttack', 
+                'DiffWalk', 'Smoker', 'PhysActivity', 'Fruits', 'Veggies', 
+                'HvyAlcoholConsump', 'AnyHealthcare', 'NoDocbcCost'
+            ];
+
+            binaryCheckboxes.forEach(field => {
+                payload[field] = document.getElementById(field).checked ? 1 : 0;
+            });
+
+            const otherFields = ['BMI', 'GenHlth', 'PhysHlth', 'MentHlth', 'Sex', 'Age', 'Education', 'Income'];
+            otherFields.forEach(field => {
+                const el = document.getElementById(field);
+                if (field === 'BMI') {
+                    payload[field] = parseFloat(el.value);
+                } else {
+                    payload[field] = parseInt(el.value);
+                }
+            });
+
+            // Call API
+            fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderPrediction(data, payload);
+                } else {
+                    renderErrors(data);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                const banner = document.getElementById('form-error-banner');
+                banner.innerText = 'A network error occurred. Please verify that the Flask service is running.';
+                banner.style.display = 'block';
+            });
+        }
+
+        function renderPrediction(data, rawPayload) {
+            const prob = data.probability;
+            const percentage = (prob * 100).toFixed(1);
+            
+            // 1. Update risk text
+            document.getElementById('risk-val').innerText = `${percentage}%`;
+            
+            // 2. Calculate radial fill (circle radius is 60, circumference = 2 * pi * 60 = ~377)
+            const fill = document.getElementById('risk-gauge');
+            const offset = 377 - (377 * prob);
+            fill.style.strokeDashoffset = offset;
+
+            // 3. Classify (Threshold used internally in backend determines data.prediction = 0 or 1)
+            const isHigh = data.prediction === 1;
+            const statusClass = isHigh ? 'high' : 'low';
+            fill.style.stroke = isHigh ? 'var(--danger)' : 'var(--success)';
+
+            const reportBox = document.getElementById('report-box');
+            reportBox.className = `report-status-box ${statusClass}`;
+
+            const badge = document.getElementById('risk-badge');
+            badge.style.display = 'inline-block';
+            badge.innerText = isHigh ? 'Elevated Diabetes Risk' : 'Standard Diabetes Risk';
+            badge.className = `report-badge-result ${statusClass}`;
+
+            // 4. Clinical explanation (with no mention of the decision threshold)
+            if (isHigh) {
+                document.getElementById('risk-explanation').innerHTML = `
+                    The classification model indicates an <strong>elevated likelihood of diabetes</strong> (probability: <strong>${percentage}%</strong>). 
+                    Clinical investigation and consultation are recommended.
+                `;
+            } else {
+                document.getElementById('risk-explanation').innerHTML = `
+                    The classification model indicates a <strong>standard/low likelihood of diabetes</strong> (probability: <strong>${percentage}%</strong>). 
+                    Continue tracking indicators as part of routine health checks.
+                `;
+            }
+
+            // 5. Populate Medical Recommendations
+            populateGuidelines(isHigh, rawPayload);
+
+            // 6. Populate Debug panel table
+            const tbody = document.getElementById('debug-table-body');
+            tbody.innerHTML = '';
+            
+            let idx = 1;
+            for (const [key, val] of Object.entries(data.input_aligned)) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${idx++}</td>
+                    <td class="code">${key}</td>
+                    <td><strong>${val}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function populateGuidelines(isHigh, payload) {
+            const guidelinesDiv = document.getElementById('clinical-guidelines');
+            const list = document.getElementById('guideline-list');
+            list.innerHTML = '';
+
+            const items = [];
+
+            if (isHigh) {
+                items.push("Schedule a Fasting Plasma Glucose (FPG) or HbA1c screening.");
+            }
+
+            if (payload.HighBP === 1) {
+                items.push("Monitor blood pressure twice daily; aim for < 130/80 mmHg.");
+            }
+
+            if (payload.HighChol === 1) {
+                items.push("Request a full lipid panel assessment (LDL, HDL, triglycerides).");
+            }
+
+            if (payload.BMI >= 25.0) {
+                items.push(`Patient BMI is ${payload.BMI.toFixed(1)} (Overweight range). Recommend dietary counseling.`);
+            }
+
+            if (payload.PhysActivity === 0) {
+                items.push("Recommend starting low-intensity aerobic activity (150 mins/week).");
+            }
+
+            if (payload.Smoker === 1) {
+                items.push("Discuss smoking cessation programs and nicotine alternatives.");
+            }
+
+            if (items.length === 0) {
+                items.push("No immediate physiological interventions needed. Maintain current wellness practices.");
+                items.push("Perform annual checkups to track wellness indicators.");
+            }
+
+            items.forEach(text => {
+                const li = document.createElement('li');
+                li.className = 'guideline-item';
+                li.innerText = text;
+                list.appendChild(li);
+            });
+
+            guidelinesDiv.style.display = 'block';
+        }
+
+        function renderErrors(data) {
+            const banner = document.getElementById('form-error-banner');
+            banner.innerText = data.error || 'Validation failed. Check form inputs.';
+            banner.style.display = 'block';
+
+            if (data.validation_errors) {
+                for (const [field, msg] of Object.entries(data.validation_errors)) {
+                    const errorEl = document.getElementById(`err-${field}`);
+                    if (errorEl) {
+                        errorEl.innerText = msg;
+                        errorEl.style.display = 'block';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
