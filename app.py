@@ -6,20 +6,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 import gradio as gr
 import uvicorn
+import spaces
 
-# Hugging Face ZeroGPU requires at least one @spaces.GPU decorator to keep the container running
-try:
-    import spaces
-except ImportError:
-    # Local environment fallback
-    class spaces:
-        @staticmethod
-        def GPU(func):
-            return func
-
+# Define prediction function wrapped with ZeroGPU decorator
 @spaces.GPU
-def dummy_gpu_trigger():
-    return "ZeroGPU Trigger Active"
+def predict_inference(features_array):
+    return model.predict_proba(features_array)
 
 # Initialize FastAPI application
 app = FastAPI(title="DiaNo Clinical Portal")
@@ -217,8 +209,8 @@ async def predict(request: Request):
         # Prepare for inference
         features_array = np.array([ordered_features], dtype=np.float32)
 
-        # Run inference
-        probabilities = model.predict_proba(features_array)
+        # Run inference using ZeroGPU-wrapped function
+        probabilities = predict_inference(features_array)
         diabetes_prob = float(probabilities[0][1])
 
         # Binary decision based on decision threshold of 0.60
